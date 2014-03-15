@@ -5,6 +5,15 @@ import sys
 import json
 import datetime
 
+def getAPIKey(filename):
+	try:
+		f = open(filename)
+		contents = f.read()
+		f.close()
+		return contents.replace("\n", "")
+	except:
+		return "TEST"
+
 def getNextArrivalInMinutes(apiKey, stopId, busId=None):
 	url = "http://api.pugetsound.onebusaway.org/api/where/arrivals-and-departures-for-stop/1_%s.json?minutesBefore=0&minutesAfter=99&key=%s" % (stopId, apiKey)
 	responseHandle = urllib2.urlopen(url)
@@ -47,7 +56,7 @@ if __name__ == "__main__":
 	if len(sys.argv) > 2:
 		busId = sys.argv[2]
 
-	apiKey = "TEST"
+	apiKey = getAPIKey("api.key")
 	try:
 		nextArrival = getNextArrivalInMinutes(apiKey, stopId, busId)
 		print nextArrival
