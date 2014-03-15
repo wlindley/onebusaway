@@ -38,6 +38,10 @@ for arrival in arrivals:
 	if predicted > currentTime and (predicted < soonestTime or soonestTime == None):
 		soonestTime = predicted
 
+if not soonestTime:
+	print "--"
+	sys.exit(0)
+
 current = datetime.datetime.fromtimestamp(currentTime / 1000) #convert ms to s
 soonest = datetime.datetime.fromtimestamp(soonestTime / 1000) #convert ms to s
 
