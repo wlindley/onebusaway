@@ -7,7 +7,7 @@ import datetime
 
 if len(sys.argv) < 2:
 	print "--"
-	sys.exit(1)
+	sys.exit(-1)
 
 stopId = sys.argv[1]
 busId = None
@@ -23,7 +23,7 @@ arrivals = response["data"]["arrivalsAndDepartures"]
 
 if len(arrivals) <= 0:
 	print "--"
-	sys.exit(0)
+	sys.exit(-1)
 	
 soonestTime = None
 for arrival in arrivals:
@@ -40,12 +40,14 @@ for arrival in arrivals:
 
 if not soonestTime:
 	print "--"
-	sys.exit(0)
+	sys.exit(-1)
 
 current = datetime.datetime.fromtimestamp(currentTime / 1000) #convert ms to s
 soonest = datetime.datetime.fromtimestamp(soonestTime / 1000) #convert ms to s
 
-print int((soonest - current).total_seconds() / 60) #convert sec to min
+nextArrival = int((soonest - current).total_seconds() / 60) #convert sec to min
+print nextArrival
+sys.exit(nextArrival)
 
 #print "Current time:"
 #print currentTime
