@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import division
 import urllib2
 import sys
 import json
@@ -14,7 +15,7 @@ def getAPIKey(filename):
 	except:
 		return "TEST"
 
-def getNextArrivalInMinutes(apiKey, stopId, busId=None):
+def getNextArrivalInSeconds(apiKey, stopId, busId=None):
 	url = "http://api.pugetsound.onebusaway.org/api/where/arrivals-and-departures-for-stop/1_%s.json?minutesBefore=0&minutesAfter=99&key=%s" % (stopId, apiKey)
 	responseHandle = urllib2.urlopen(url)
 	response = json.loads(responseHandle.read())
@@ -44,12 +45,12 @@ def getNextArrivalInMinutes(apiKey, stopId, busId=None):
 	current = datetime.datetime.fromtimestamp(currentTime / 1000) #convert ms to s
 	soonest = datetime.datetime.fromtimestamp(soonestTime / 1000) #convert ms to s
 
-	return int((soonest - current).total_seconds() / 60) #convert sec to min
+	return (soonest - current).total_seconds()
 
 if __name__ == "__main__":
 	if len(sys.argv) < 2:
-		print "--"
-		sys.exit(-1)
+		print float("NaN")
+		sys.exit(1)
 
 	stopId = sys.argv[1]
 	busId = None
@@ -58,9 +59,9 @@ if __name__ == "__main__":
 
 	apiKey = getAPIKey("api.key")
 	try:
-		nextArrival = getNextArrivalInMinutes(apiKey, stopId, busId)
+		nextArrival = getNextArrivalInSeconds(apiKey, stopId, busId)
 		print nextArrival
-		sys.exit(nextArrival)
+		sys.exit(0)
 	except Exception as e:
-		print "--"
-		sys.exit(255)
+		print float("NaN")
+		sys.exit(0)
