@@ -21,7 +21,16 @@ def getNextArrivalInSeconds(apiKey, stopId, busId=None):
 	response = json.loads(responseHandle.read())
 
 	currentTime = response["currentTime"]
-	arrivals = response["data"]["arrivalsAndDepartures"]
+	payload = response["data"]
+	if not payload:
+		raise Exception("No payload in response")
+	if not "arrivalsAndDepartures" in payload:
+		payload = payload["entry"]
+	if not payload:
+		raise Exception("Malformed payload in response")
+	if not "arrivalsAndDepartures" in payload:
+		raise Exception("No arrival info in payload")
+	arrivals = payload["arrivalsAndDepartures"]
 
 	if len(arrivals) <= 0:
 		raise Exception("No upcoming arrivals at stop %s" % stopId)
