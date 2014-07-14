@@ -3,12 +3,12 @@
 from __future__ import division
 import urllib2
 import sys
+import os
 import json
 import datetime
 import traceback
 import logging
-
-logging.basicConfig(filename="onebusaway.log", level=logging.DEBUG)
+import inspect
 
 def getAPIKey(filename):
 	try:
@@ -95,6 +95,9 @@ def getSortedSoonestArrivals(arrivals, busId):
 	return soonestTimes
 
 if __name__ == "__main__":
+	scriptDir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+	logging.basicConfig(filename=os.path.join(scriptDir, "onebusaway.log"), level=logging.DEBUG)
+
 	if len(sys.argv) < 2:
 		print float("NaN")
 		sys.exit(2)
