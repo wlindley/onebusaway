@@ -8,7 +8,13 @@ import json
 import datetime
 import traceback
 import logging
+import logging.handlers
 import inspect
+
+scriptDir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+logger = logging.getLogger("onebusaway")
+logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.handlers.RotatingFileHandler(os.path.join(scriptDir, "onebusaway.log"), maxBytes=1024*1024, backupCount=5))
 
 def getAPIKey(filename):
 	try:
@@ -20,8 +26,8 @@ def getAPIKey(filename):
 		return "TEST"
 
 def getNextArrivalInSeconds(apiKey, stopId, busId=None, arrivalIndex=0):
-	logging.info("\n------------------------------------------------------------------------------------")
-	logging.info("Getting info for stop: %s, bus: %s, arrival index: %s" % (stopId, busId, arrivalIndex))
+	logger.info("\n------------------------------------------------------------------------------------")
+	logger.info("Getting info for stop: %s, bus: %s, arrival index: %s" % (stopId, busId, arrivalIndex))
 	response = getResponse(apiKey, stopId)
 	currentTime = getCurrentTime(response)
 	arrivals = getArrivalPayload(response)
@@ -32,7 +38,7 @@ def getResponse(apiKey, stopId):
 	responseHandle = urllib2.urlopen(url)
 	rawResponse = responseHandle.read()
 	response = json.loads(rawResponse)
-	logging.debug("API response:\n" + rawResponse + "\n")
+	logger.debug("API response:\n" + rawResponse + "\n")
 	return response
 
 def getCurrentTime(response):
@@ -50,7 +56,7 @@ def getArrivalPayload(response):
 		raise Exception("No arrival info in payload")
 	arrivals = payload["arrivalsAndDepartures"]
 
-	logging.info("Upcoming arrivals at stop:\n" + str(arrivals) + "\n")
+	logger.info("Upcoming arrivals at stop:\n" + str(arrivals) + "\n")
 
 	if len(arrivals) <= 0:
 		raise Exception("No upcoming arrivals at stop %s" % stopId)
@@ -67,14 +73,14 @@ def getTimeUntilSpecifiedArrival(currentTime, arrivals, busId, arrivalIndex):
 
 	soonestTime = soonestTimes[arrivalIndex]
 
-	logging.info("Current time (raw): " + str(currentTime))
-	logging.info("Arrival time (raw): " + str(soonestTime))
+	logger.info("Current time (raw): " + str(currentTime))
+	logger.info("Arrival time (raw): " + str(soonestTime))
 
 	current = datetime.datetime.fromtimestamp(currentTime / 1000) #convert ms to s
 	soonest = datetime.datetime.fromtimestamp(soonestTime / 1000) #convert ms to s
 
 	secondsUntilArrival = (soonest - current).total_seconds()
-	logging.info("Seconds until arrival: %s" % secondsUntilArrival)
+	logger.info("Seconds until arrival: %s" % secondsUntilArrival)
 	return secondsUntilArrival
 
 def getSortedSoonestArrivals(arrivals, busId):
@@ -86,18 +92,15 @@ def getSortedSoonestArrivals(arrivals, busId):
 	
 		curArrival = arrival["scheduledArrivalTime"]
 		predicted = arrival["predictedArrivalTime"]
-		if predicted < curArrival:
+		if predicted < curArrival and 0 < predicted:
 			curArrival = predicted
 		soonestTimes.append(curArrival)
 
 	soonestTimes.sort()
-	logging.info("Sorted and filtered upcoming arrivals: " + str(soonestTimes))
+	logger.info("Sorted and filtered upcoming arrivals: " + str(soonestTimes))
 	return soonestTimes
 
 if __name__ == "__main__":
-	scriptDir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-	logging.basicConfig(filename=os.path.join(scriptDir, "onebusaway.log"), level=logging.DEBUG)
-
 	if len(sys.argv) < 2:
 		print float("NaN")
 		sys.exit(2)
@@ -121,5 +124,5 @@ if __name__ == "__main__":
 		sys.exit(0)
 	except Exception as e:
 		print float("NaN")
-		logging.exception(str(e) + "\n" + traceback.format_exc())
+		logger.exception(str(e) + "\n" + traceback.format_exc())
 		sys.exit(1)
