@@ -29,6 +29,7 @@ def getNextArrivalInSeconds(apiKey, stopId, busId=None, arrivalIndex=0):
 	logger.info("\n------------------------------------------------------------------------------------")
 	logger.info("Getting info for stop: %s, bus: %s, arrival index: %s" % (stopId, busId, arrivalIndex))
 	response = getResponse(apiKey, stopId)
+	validateResponse(response)
 	currentTime = getCurrentTime(response)
 	arrivals = getArrivalPayload(response)
 	return getTimeUntilSpecifiedArrival(currentTime, arrivals, busId, arrivalIndex)
@@ -40,6 +41,12 @@ def getResponse(apiKey, stopId):
 	response = json.loads(rawResponse)
 	logger.debug("API response:\n" + rawResponse + "\n")
 	return response
+
+def validateResponse(response):
+	if response["code"] < 400:
+		return
+	logger.error("Server returned error code %s: %s" % (response["code"], response["text"]))
+	raise Exception("Error code %s: %s" % (response["code"], response["text"]))
 
 def getCurrentTime(response):
 	return response["currentTime"]
@@ -64,7 +71,7 @@ def getArrivalPayload(response):
 	return arrivals
 
 def getTimeUntilSpecifiedArrival(currentTime, arrivals, busId, arrivalIndex):
-	soonestTimes = getSortedSoonestArrivals(arrivals, busId)
+	soonestTimes = getSortedSoonestArrivals(arrivals, busId, currentTime)
 
 	if 0 == len(soonestTimes):
 		raise Exception("No upcoming arrivals of bus %s at stop %s" % (busId, stopId))
@@ -83,7 +90,7 @@ def getTimeUntilSpecifiedArrival(currentTime, arrivals, busId, arrivalIndex):
 	logger.info("Seconds until arrival: %s" % secondsUntilArrival)
 	return secondsUntilArrival
 
-def getSortedSoonestArrivals(arrivals, busId):
+def getSortedSoonestArrivals(arrivals, busId, currentTime):
 	soonestTimes = []
 	for arrival in arrivals:
 		name = arrival["routeShortName"]
@@ -94,7 +101,8 @@ def getSortedSoonestArrivals(arrivals, busId):
 		predicted = arrival["predictedArrivalTime"]
 		if predicted < curArrival and 0 < predicted:
 			curArrival = predicted
-		soonestTimes.append(curArrival)
+		if curArrival >= currentTime:
+			soonestTimes.append(curArrival)
 
 	soonestTimes.sort()
 	logger.info("Sorted and filtered upcoming arrivals: " + str(soonestTimes))
@@ -120,9 +128,11 @@ if __name__ == "__main__":
 	apiKey = getAPIKey("api.key")
 	try:
 		nextArrival = getNextArrivalInSeconds(apiKey, stopId, busId, arrivalIndex)
+		logger.info("Next arrival: %s" % nextArrival)
 		print nextArrival
 		sys.exit(0)
 	except Exception as e:
 		print float("NaN")
 		logger.exception(str(e) + "\n" + traceback.format_exc())
+		logger.error("Next arrival: %s" % float("NaN"))
 		sys.exit(1)
