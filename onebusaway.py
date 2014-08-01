@@ -20,7 +20,7 @@ def _buildLogger():
 	return logger
 logger = _buildLogger()
 
-def getAPIKey(filename):
+def getAPIKey(filename="api.key"):
 	try:
 		f = open(filename)
 		contents = f.read()
@@ -38,6 +38,14 @@ def getNextArrivalInSeconds(apiKey, stopId, busId=None, arrivalIndex=0):
 	arrivals = _getArrivalPayload(response)
 	return _getTimeUntilSpecifiedArrival(currentTime, arrivals, busId, arrivalIndex)
 
+def safeGetNextArrivalInSeconds(apiKey, stopId, busId=None, arrivalIndex=0):
+	try:
+		return getNextArrivalInSeconds(apiKey, stopId, busId, arrivalIndex)
+	except Exception as e:
+		logger.exception(str(e) + "\n" + traceback.format_exc())
+		logger.error("Next arrival: %s" % float("NaN"))
+		return float("NaN")
+
 def _getResponse(apiKey, stopId):
 	url = "http://api.pugetsound.onebusaway.org/api/where/arrivals-and-departures-for-stop/1_%s.json?minutesBefore=0&minutesAfter=99&key=%s" % (stopId, apiKey)
 	logger.debug("calling url: %s" % url)
@@ -45,6 +53,7 @@ def _getResponse(apiKey, stopId):
 	rawResponse = responseHandle.read()
 	response = json.loads(rawResponse)
 	logger.debug("API response:\n" + rawResponse + "\n")
+	responseHandle.close()
 	return response
 
 def _validateResponse(response):

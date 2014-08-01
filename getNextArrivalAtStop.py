@@ -10,6 +10,7 @@ import traceback
 import logging
 import logging.handlers
 import inspect
+import math
 import onebusaway
 
 if __name__ == "__main__":
@@ -30,14 +31,9 @@ if __name__ == "__main__":
 			print float("NaN")
 			sys.exit(3)
 
-	apiKey = onebusaway.getAPIKey("api.key")
-	try:
-		nextArrival = onebusaway.getNextArrivalInSeconds(apiKey, stopId, busId, arrivalIndex)
-		logger.info("Next arrival: %s" % nextArrival)
-		print nextArrival
-		sys.exit(0)
-	except Exception as e:
-		print float("NaN")
-		logger.exception(str(e) + "\n" + traceback.format_exc())
-		logger.error("Next arrival: %s" % float("NaN"))
+	apiKey = onebusaway.getAPIKey()
+	nextArrival = onebusaway.safeGetNextArrivalInSeconds(apiKey, stopId, busId, arrivalIndex)
+	print nextArrival
+	if math.isnan(nextArrival):
 		sys.exit(1)
+	sys.exit(0)
