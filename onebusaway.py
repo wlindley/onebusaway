@@ -90,7 +90,7 @@ def _getTimeUntilSpecifiedArrival(currentTime, arrivals, busId, arrivalIndex):
 	if 0 == len(soonestTimes):
 		raise Exception("No upcoming arrivals of bus %s at stop %s" % (busId, stopId))
 	if arrivalIndex >= len(soonestTimes):
-		raise Exception("Stop %s only has %s upcoming arrivals for bus %s, but arrival index %s was requested" % (stopId, busId, len(soonestTimes), arrivalIndex))
+		raise Exception("Specified stop only has %s upcoming arrivals for bus %s, but arrival index %s was requested" % (len(soonestTimes), busId, arrivalIndex))
 
 	soonestTime = soonestTimes[arrivalIndex]
 
