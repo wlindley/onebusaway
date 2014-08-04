@@ -8,20 +8,24 @@ import onebusaway
 
 logger = onebusaway.getLogger()
 
-def getArrivalTime(stopId, busId, arrivalIndex):
-	return onebusaway.safeGetNextArrivalInSeconds(onebusaway.getAPIKey(), stopId, busId, arrivalIndex)
+def getAndSubmitUpdate(stopId, busId, arrivalIndex):
+	arrivalTime = _getArrivalTimeWithRetries(stopId, busId, arrivalIndex)
+	_sendToMailbox(stopId, busId, arrivalIndex, arrivalTime)
 
-def getArrivalTimeWithRetries(stopId, busId, arrivalIndex):
-	arrivalTime = getArrivalTime(stopId, busId, arrivalIndex)
+def _getArrivalTimeWithRetries(stopId, busId, arrivalIndex):
+	arrivalTime = _getArrivalTime(stopId, busId, arrivalIndex)
 	if math.isnan(arrivalTime):
 		for i in range(10):
 			time.sleep(.5)
-			arrivalTime = getArrivalTime(stopId, busId, arrivalIndex)
+			arrivalTime = _getArrivalTime(stopId, busId, arrivalIndex)
 			if not math.isnan(arrivalTime):
 				break
 	return arrivalTime
 
-def sendToMailbox(stopId, busId, arrivalIndex, arrivalTime):
+def _getArrivalTime(stopId, busId, arrivalIndex):
+	return onebusaway.safeGetNextArrivalInSeconds(onebusaway.getAPIKey(), stopId, busId, arrivalIndex)
+
+def _sendToMailbox(stopId, busId, arrivalIndex, arrivalTime):
 	url = "http://localhost/mailbox/%s,%s,%s,%s" % (stopId, busId, arrivalIndex, arrivalTime)
 	logger.debug("opening url: %s" % url)
 	try:
@@ -43,7 +47,4 @@ if __name__ == "__main__":
 	except:
 		sys.exit(-2)
 
-	arrivalTime = getArrivalTimeWithRetries(stopId, busId, arrivalIndex)
-
-	if not math.isnan(arrivalTime):
-		sendToMailbox(stopId, busId, arrivalIndex, arrivalTime)
+	getAndSubmitUpdate(stopId, busId, arrivalIndex)

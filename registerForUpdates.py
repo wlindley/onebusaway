@@ -1,28 +1,27 @@
 #!/usr/bin/env python
 
 import sys
-import os
-import inspect
+import time
+import traceback
+import onebusaway
 
-_filename = "requestedBuses.dat"
+logger = onebusaway.getLogger()
 
 def addToFile(stopId, busId, arrivalIndex):
-	requestLine = generateRequestLine(stopId, busId, arrivalIndex)
-	handle = getFile()
-	addUniqueLineToFile(requestLine, handle)
+	requestLine = _generateRequestLine(stopId, busId, arrivalIndex)
+	handle = _getFile()
+	_addUniqueLineToFile(requestLine, handle)
 	handle.close()
 
-def generateRequestLine(stopId, busId, arrivalIndex):
+def _generateRequestLine(stopId, busId, arrivalIndex):
 	return ",".join([stopId, busId, arrivalIndex]) + "\n"
 
-def getFile():
-	scriptDir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-	fname = os.path.join(scriptDir, _filename)
-	handle = open(fname, 'a+')
+def _getFile():
+	handle = open(onebusaway.getRequestedBusesPath(), 'a+')
 	handle.seek(0)
 	return handle
 
-def addUniqueLineToFile(requestLine, handle):
+def _addUniqueLineToFile(requestLine, handle):
 	for line in handle.readlines():
 		if line == requestLine:
 			return
@@ -37,4 +36,10 @@ if __name__ == "__main__":
 	busId = sys.argv[2]
 	arrivalIndex = sys.argv[3]
 
-	addToFile(stopId, busId, arrivalIndex)
+	for i in range(10):
+		try:
+			addToFile(stopId, busId, arrivalIndex)
+			break
+		except Exception as e:
+			logger.exception(str(e) + "\n" + traceback.format_exc())
+			time.sleep(.1)

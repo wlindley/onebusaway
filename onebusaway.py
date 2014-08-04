@@ -20,6 +20,10 @@ def _buildLogger():
 	return logger
 logger = _buildLogger()
 
+def getRequestedBusesPath():
+	scriptDir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+	return os.path.join(scriptDir, "requestedBuses.dat")
+
 def getAPIKey(filename="api.key"):
 	try:
 		f = open(filename)
@@ -44,7 +48,7 @@ def safeGetNextArrivalInSeconds(apiKey, stopId, busId=None, arrivalIndex=0):
 	except Exception as e:
 		logger.exception(str(e) + "\n" + traceback.format_exc())
 		logger.error("Next arrival: %s" % float("NaN"))
-		return float("NaN")
+	return float("NaN")
 
 def _getResponse(apiKey, stopId):
 	url = "http://api.pugetsound.onebusaway.org/api/where/arrivals-and-departures-for-stop/1_%s.json?minutesBefore=0&minutesAfter=99&key=%s" % (stopId, apiKey)
@@ -88,7 +92,7 @@ def _getTimeUntilSpecifiedArrival(currentTime, arrivals, busId, arrivalIndex):
 	soonestTimes = _getSortedSoonestArrivals(arrivals, busId, currentTime)
 
 	if 0 == len(soonestTimes):
-		raise Exception("No upcoming arrivals of bus %s at stop %s" % (busId, stopId))
+		raise Exception("No upcoming arrivals of bus %s at specified stop" % busId)
 	if arrivalIndex >= len(soonestTimes):
 		raise Exception("Specified stop only has %s upcoming arrivals for bus %s, but arrival index %s was requested" % (len(soonestTimes), busId, arrivalIndex))
 
