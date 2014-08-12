@@ -15,7 +15,7 @@ def getLogger():
 def _buildLogger():
 	scriptDir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 	logger = getLogger()
-	logger.setLevel(logging.DEBUG)
+	logger.setLevel(logging.INFO)
 	logger.addHandler(logging.handlers.RotatingFileHandler(os.path.join(scriptDir, "onebusaway.log"), maxBytes=1024*1024, backupCount=5))
 	return logger
 logger = _buildLogger()
@@ -81,7 +81,7 @@ def _getArrivalPayload(response):
 		raise Exception("No arrival info in payload")
 	arrivals = payload["arrivalsAndDepartures"]
 
-	logger.info("Upcoming arrivals at stop:\n" + str(arrivals) + "\n")
+	logger.debug("Upcoming arrivals at stop:\n" + str(arrivals) + "\n")
 
 	if len(arrivals) <= 0:
 		raise Exception("No upcoming arrivals at stop %s" % stopId)
@@ -112,7 +112,7 @@ def _getSortedSoonestArrivals(arrivals, busId, currentTime):
 	soonestTimes = []
 	for arrival in arrivals:
 		name = arrival["routeShortName"]
-		if None != busId and name != busId:
+		if None != busId and name != busId.replace("_", " "):
 			continue
 	
 		curArrival = arrival["scheduledArrivalTime"]
