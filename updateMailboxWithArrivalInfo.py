@@ -8,9 +8,9 @@ import onebusaway
 
 logger = onebusaway.getLogger()
 
-def getAndSubmitUpdate(stopId, busId, arrivalIndex):
+def getAndSubmitUpdate(stopId, busId, arrivalIndex, displayIndex):
 	arrivalTime = _getArrivalTimeWithRetries(stopId, busId, arrivalIndex)
-	_sendToMailbox(stopId, busId, arrivalIndex, arrivalTime)
+	_sendToMailbox(displayIndex, arrivalTime)
 
 def _getArrivalTimeWithRetries(stopId, busId, arrivalIndex):
 	arrivalTime = _getArrivalTime(stopId, busId, arrivalIndex)
@@ -25,8 +25,8 @@ def _getArrivalTimeWithRetries(stopId, busId, arrivalIndex):
 def _getArrivalTime(stopId, busId, arrivalIndex):
 	return onebusaway.safeGetNextArrivalInSeconds(onebusaway.getAPIKey(), stopId, busId, arrivalIndex)
 
-def _sendToMailbox(stopId, busId, arrivalIndex, arrivalTime):
-	url = "http://localhost/mailbox/%s,%s,%s,%s" % (stopId, busId, arrivalIndex, arrivalTime)
+def _sendToMailbox(displayIndex, arrivalTime):
+	url = "http://localhost/mailbox/%s,%s" % (displayIndex, arrivalTime)
 	logger.debug("opening url: %s" % url)
 	try:
 		handle = urllib2.urlopen(url)
@@ -36,8 +36,8 @@ def _sendToMailbox(stopId, busId, arrivalIndex, arrivalTime):
 		logger.warning("Error while posting to mailbox")
 
 if __name__ == "__main__":
-	if len(sys.argv) < 4:
-		print "Usage: %s stop_id bus_id arrival_index" % sys.argv[0]
+	if len(sys.argv) < 5:
+		print "Usage: %s stop_id bus_id arrival_index display_index" % sys.argv[0]
 		sys.exit(-1)
 
 	stopId = sys.argv[1]
@@ -46,5 +46,9 @@ if __name__ == "__main__":
 		arrivalIndex = int(sys.argv[3])
 	except:
 		sys.exit(-2)
+	try:
+		displayIndex = int(sys.argv[4])
+	except:
+		sys.exit(-3)
 
-	getAndSubmitUpdate(stopId, busId, arrivalIndex)
+	getAndSubmitUpdate(stopId, busId, arrivalIndex, displayIndex)

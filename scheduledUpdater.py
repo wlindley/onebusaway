@@ -11,8 +11,9 @@ logger = onebusaway.getLogger()
 def findAndUpdateRequestedBuses():
 	logger.info("----Running Scheduled Update----")
 	requestedData = _getRequestedData()
-	for data in requestedData:
-		_submitUpdate(data[0], data[1], data[2])
+	for i in range(len(requestedData)):
+		data = requestedData[i]
+		_submitUpdate(data[0], data[1], data[2], i)
 
 def _getRequestedData():
 	handle = _getFile()
@@ -32,9 +33,9 @@ def _convertLinesToData(lines):
 			logger.exception(str(e) + "\n" + traceback.format_exc())
 	return data
 
-def _submitUpdate(stopId, busId, arrivalIndex):
+def _submitUpdate(stopId, busId, arrivalIndex, displayIndex):
 	logger.debug("Updating stop %s, bus %s, arrival index %s" % (stopId, busId, arrivalIndex))
-	obaupdate.getAndSubmitUpdate(stopId, busId, arrivalIndex)
+	obaupdate.getAndSubmitUpdate(stopId, busId, arrivalIndex, displayIndex)
 
 if __name__ == "__main__":
 	for i in range(10):
