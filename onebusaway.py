@@ -115,12 +115,9 @@ def _getSortedSoonestArrivals(arrivals, busId, currentTime):
 		if None != busId and name != busId.replace("_", " "):
 			continue
 	
-		curArrival = arrival["scheduledArrivalTime"]
-		predicted = arrival["predictedArrivalTime"]
-		if predicted < curArrival and 0 < predicted:
-			curArrival = predicted
-		if curArrival >= currentTime:
-			soonestTimes.append(curArrival)
+		nextArrival = arrival["predictedArrivalTime"]
+		if nextArrival >= currentTime:
+			soonestTimes.append(nextArrival)
 
 	soonestTimes.sort()
 	logger.info("Sorted and filtered upcoming arrivals: " + str(soonestTimes))
